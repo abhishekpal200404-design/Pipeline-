@@ -10,24 +10,32 @@ pipeline {
             }
         }
 
+        stage('Verify Docker') {
+            steps {
+                sh 'docker --version'
+                sh 'docker compose version'
+            }
+        }
+
         stage('Build') {
             steps {
-                bat 'docker compose build'
+                sh 'docker compose build'
             }
         }
 
         stage('Deploy') {
             steps {
-                bat '''
-                docker compose down
-                docker compose up -d
+                sh '''
+                    docker compose down || true
+                    docker compose up -d
                 '''
             }
         }
 
         stage('Verify') {
             steps {
-                bat 'docker ps'
+                sh 'docker ps'
+                sh 'docker compose ps'
             }
         }
     }
@@ -39,6 +47,10 @@ pipeline {
 
         failure {
             echo 'Deployment Failed'
+        }
+
+        always {
+            sh 'docker compose logs --tail=50 || true'
         }
     }
 }
